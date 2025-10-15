@@ -1,0 +1,43 @@
+// 在 Groovy DSL 中，为了使用 RepositoriesMode 枚举，最好先导入它
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex 'com\\.android.*'
+                includeGroupByRegex 'com\\.google.*'
+                includeGroupByRegex 'androidx.*'
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        id 'com.android.application' version '8.11.0'
+        id 'com.android.library' version '8.11.0'
+        id 'org.jetbrains.kotlin.android' version '2.2.20'
+        id 'org.jetbrains.kotlin.multiplatform' version '2.2.20'
+        id 'org.jetbrains.kotlin.plugin.compose' version '2.2.20'
+        id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.20'
+        id 'app.cash.sqldelight' version '2.1.0'
+        id 'dev.icerock.mobile.multiplatform-resources' version '0.25.1'
+    }
+}
+
+dependencyResolutionManagement {
+    // 在 Groovy 中，使用等号进行属性赋值，而不是 .set() 方法
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'android'
+
+include ':library'
+project(':library').projectDir = file('../library')
+
+includeBuild '../../shared'
+includeBuild '../../extractor'
