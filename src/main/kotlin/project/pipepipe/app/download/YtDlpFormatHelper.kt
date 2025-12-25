@@ -1,4 +1,4 @@
-package project.pipepipe.app.helper
+package project.pipepipe.app.download
 
 import android.util.Log
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -7,8 +7,12 @@ import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.w3c.dom.Element
 import project.pipepipe.app.SharedContext
+import project.pipepipe.app.helper.FormatHelper
 import project.pipepipe.app.ui.component.Format
+import java.io.ByteArrayInputStream
+import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.math.min
 
 /**
@@ -174,19 +178,19 @@ object YtDlpFormatHelper {
         val audioFormats = mutableListOf<Format>()
 
         try {
-            val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+            val factory = DocumentBuilderFactory.newInstance()
             val builder = factory.newDocumentBuilder()
-            val inputStream = java.io.ByteArrayInputStream(dashManifest.toByteArray(Charsets.UTF_8))
+            val inputStream = ByteArrayInputStream(dashManifest.toByteArray(Charsets.UTF_8))
             val document = builder.parse(inputStream)
 
             val adaptationSets = document.getElementsByTagName("AdaptationSet")
             for (i in 0 until adaptationSets.length) {
-                val adaptationSet = adaptationSets.item(i) as org.w3c.dom.Element
+                val adaptationSet = adaptationSets.item(i) as Element
                 val contentType = adaptationSet.getAttribute("contentType")
 
                 val representations = adaptationSet.getElementsByTagName("Representation")
                 for (j in 0 until representations.length) {
-                    val rep = representations.item(j) as org.w3c.dom.Element
+                    val rep = representations.item(j) as Element
                     val repId = rep.getAttribute("id")
                     val codecs = rep.getAttribute("codecs")
 
@@ -199,16 +203,18 @@ object YtDlpFormatHelper {
                                     Regex("av01\\.0\\.(09|1[0-3])M", RegexOption.IGNORE_CASE).containsMatchIn(codecs)
                             val displayLabel = FormatHelper.formatVideoLabel(codecName, "${height}p", frameRate) + if (isHDR) " HDR" else ""
 
-                            videoFormats.add(Format(
-                                id = repId,
-                                url = url,
-                                displayLabel = displayLabel,
-                                height = height,
-                                frameRate = frameRate,
-                                codec = codecs,
-                                bitrate = rep.getAttribute("bandwidth").toIntOrNull() ?: 0,
-                                isVideoOnly = true
-                            ))
+                            videoFormats.add(
+                                Format(
+                                    id = repId,
+                                    url = url,
+                                    displayLabel = displayLabel,
+                                    height = height,
+                                    frameRate = frameRate,
+                                    codec = codecs,
+                                    bitrate = rep.getAttribute("bandwidth").toIntOrNull() ?: 0,
+                                    isVideoOnly = true
+                                )
+                            )
                         }
                         "audio" -> {
                             val codecName = FormatHelper.parseCodecName(codecs)
@@ -216,15 +222,17 @@ object YtDlpFormatHelper {
                             val bitrateKbps = bitrate / 1000
                             val displayLabel = "$codecName ${bitrateKbps}kbps"
 
-                            audioFormats.add(Format(
-                                id = repId,
-                                url = url,
-                                displayLabel = displayLabel,
-                                height = 0,
-                                frameRate = 0f,
-                                codec = codecs,
-                                bitrate = bitrate
-                            ))
+                            audioFormats.add(
+                                Format(
+                                    id = repId,
+                                    url = url,
+                                    displayLabel = displayLabel,
+                                    height = 0,
+                                    frameRate = 0f,
+                                    codec = codecs,
+                                    bitrate = bitrate
+                                )
+                            )
                         }
                     }
                 }

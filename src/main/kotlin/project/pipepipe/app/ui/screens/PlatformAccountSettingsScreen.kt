@@ -1,4 +1,4 @@
-package project.pipepipe.app.ui.screens.settings
+package project.pipepipe.app.ui.screens
 
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -19,9 +19,8 @@ import project.pipepipe.app.MR
 import project.pipepipe.app.helper.CookieManager
 import project.pipepipe.app.helper.ToastManager
 import project.pipepipe.app.helper.isLoggedInCookie
-import project.pipepipe.app.settings.PreferenceItem
 import project.pipepipe.app.ui.component.CustomTopBar
-import project.pipepipe.app.ui.screens.PreferenceScreen
+import project.pipepipe.app.ui.screens.settings.PreferenceItem
 import android.webkit.CookieManager as AndroidCookieManager
 
 enum class LoginPlatform(
@@ -98,7 +97,8 @@ fun AccountSettingsScreen(
     ) {
         buildList {
             // ===== Clear WebView Cookies =====
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "clear_webview_cookies",
                 title = clearWebViewCookiesTitle,
                 summary = clearWebViewCookiesSummary,
@@ -118,7 +118,8 @@ fun AccountSettingsScreen(
             // ===== YouTube Section =====
             add(PreferenceItem.CategoryPref(key = "youtube_category", title = "YouTube"))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "youtube_login",
                 title = loginTitle,
                 summary = loginYoutubeSummary,
@@ -126,7 +127,8 @@ fun AccountSettingsScreen(
                 onClick = { showLoginWebView = LoginPlatform.YOUTUBE }
             ))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "youtube_logout",
                 title = logoutTitle,
                 enabled = youtubeLoggedIn,
@@ -140,7 +142,8 @@ fun AccountSettingsScreen(
             // ===== BiliBili Section =====
             add(PreferenceItem.CategoryPref(key = "bilibili_category", title = "BiliBili"))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "bilibili_login",
                 title = loginTitle,
                 summary = loginBilibiliSummary,
@@ -148,7 +151,8 @@ fun AccountSettingsScreen(
                 onClick = { showLoginWebView = LoginPlatform.BILIBILI }
             ))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "bilibili_logout",
                 title = logoutTitle,
                 enabled = bilibiliLoggedIn,
@@ -163,7 +167,8 @@ fun AccountSettingsScreen(
             // ===== NicoNico Section =====
             add(PreferenceItem.CategoryPref(key = "niconico_category", title = "NicoNico"))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "niconico_login",
                 title = loginTitle,
                 summary = loginNiconicoSummary,
@@ -171,7 +176,8 @@ fun AccountSettingsScreen(
                 onClick = { showLoginWebView = LoginPlatform.NICONICO }
             ))
 
-            add(PreferenceItem.ClickablePref(
+            add(
+                PreferenceItem.ClickablePref(
                 key = "niconico_logout",
                 title = logoutTitle,
                 enabled = niconicoLoggedIn,
