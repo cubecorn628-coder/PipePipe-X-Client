@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.json.Json
 import project.pipepipe.app.SharedContext
+import project.pipepipe.app.helper.SupportedServiceHelper
 import project.pipepipe.database.Subscriptions
 import project.pipepipe.shared.infoitem.SupportedServiceInfo
 
@@ -16,8 +17,7 @@ import project.pipepipe.shared.infoitem.SupportedServiceInfo
  */
 fun loadServiceFetchIntervals(): Map<Int, Int> {
     return try {
-        val jsonString = SharedContext.settingsManager.getString("supported_services", "[]")
-        val serviceInfoList = Json.decodeFromString<List<SupportedServiceInfo>>(jsonString)
+        val serviceInfoList = SupportedServiceHelper.getSupportedServices()
         serviceInfoList.associate { it.serviceId to it.feedFetchInterval }
     } catch (e: Exception) {
         e.printStackTrace()

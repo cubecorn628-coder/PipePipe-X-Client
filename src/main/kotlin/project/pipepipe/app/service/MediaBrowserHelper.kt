@@ -14,6 +14,7 @@ import project.pipepipe.app.MR
 import project.pipepipe.app.R
 import project.pipepipe.app.SharedContext
 import project.pipepipe.app.database.DatabaseOperations
+import project.pipepipe.app.helper.SupportedServiceHelper
 import project.pipepipe.app.utils.generateQueryUrl
 import project.pipepipe.app.viewmodel.PlaylistDetailViewModel
 import project.pipepipe.app.viewmodel.SearchViewModel
@@ -159,12 +160,7 @@ object MediaBrowserHelper {
     private fun initSearchServiceIfNeeded() {
         if (searchVm.uiState.value.selectedService != null) return
 
-        val serviceInfoList = try {
-            val jsonString = SharedContext.settingsManager.getString(SUPPORTED_SERVICES_KEY, "[]")
-            Json.decodeFromString<List<SupportedServiceInfo>>(jsonString)
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val serviceInfoList = SupportedServiceHelper.getSupportedServices()
 
         if (serviceInfoList.isEmpty()) return
 
