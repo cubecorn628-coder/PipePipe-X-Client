@@ -292,6 +292,9 @@ class MainActivity : ComponentActivity() {
     private fun setupNavigationView(navigationView: NavigationView) {
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.nav_trending -> {
+                    navController.navigate(Screen.PlaylistDetail.createRoute("trending"))
+                }
                 R.id.nav_subscriptions -> {
                     navController.navigate(Screen.Subscription.route)
                 }

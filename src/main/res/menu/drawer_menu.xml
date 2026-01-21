@@ -3,6 +3,10 @@
 
     <group android:checkableBehavior="single">
         <item
+                android:id="@+id/nav_trending"
+                android:icon="@drawable/ic_whatshot"
+                android:title="@string/trending"/>
+        <item
                 android:id="@+id/nav_whats_new"
                 android:icon="@drawable/ic_rss_feed"
                 android:title="@string/all_feed_title"/>
