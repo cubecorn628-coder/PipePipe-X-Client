@@ -18,7 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import project.pipepipe.app.ui.component.AsyncImageSmart
+import project.pipepipe.app.ui.component.ImageType
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -111,8 +112,9 @@ private fun ThumbnailSection(state: DownloadItemState) {
             .aspectRatio(16f / 10f)
             .clip(RoundedCornerShape(8.dp))
     ) {
-        AsyncImage(
+        AsyncImageSmart(
             model = state.imageUrl,
+            imageType = ImageType.THUMBNAIL,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
