@@ -32,6 +32,7 @@ class AndroidPlatformDatabaseActions(private val context: Context): PlatformData
     }
 
     override fun initializeDatabase() {
+        migrateDatabaseName()
         driver = AndroidSqliteDriver(
             schema = AppDatabase.Schema,
             context = context,
@@ -44,6 +45,26 @@ class AndroidPlatformDatabaseActions(private val context: Context): PlatformData
             }
         )
         SharedContext.database = createAppDatabase(driver)
+    }
+
+    private fun migrateDatabaseName() {
+        val settings = SharedContext.settingsManager
+        if (settings.getBoolean("database_name_migrated", false)) return
+
+        val oldDb = context.getDatabasePath("newpipe.db")
+        if (oldDb.exists()) {
+            val newDb = context.getDatabasePath("pipepipe.db")
+            if (!newDb.exists()) {
+                oldDb.renameTo(newDb)
+                listOf("-journal", "-shm", "-wal").forEach { suffix ->
+                    val oldFile = context.getDatabasePath("newpipe.db$suffix")
+                    if (oldFile.exists()) {
+                        oldFile.renameTo(context.getDatabasePath("pipepipe.db$suffix"))
+                    }
+                }
+            }
+        }
+        settings.putBoolean("database_name_migrated", true)
     }
 
     override fun resetDatabase() {
@@ -70,6 +91,13 @@ class AndroidPlatformDatabaseActions(private val context: Context): PlatformData
     override fun writeDatabaseBytes(bytes: ByteArray) {
         val dbFile = context.getDatabasePath("pipepipe.db")
         dbFile.parentFile?.mkdirs()
+
+        // Delete auxiliary files before writing new database bytes to prevent corruption
+        listOf("-journal", "-shm", "-wal").forEach { suffix ->
+            val auxFile = context.getDatabasePath("pipepipe.db$suffix")
+            if (auxFile.exists()) auxFile.delete()
+        }
+
         dbFile.writeBytes(bytes)
     }
 
