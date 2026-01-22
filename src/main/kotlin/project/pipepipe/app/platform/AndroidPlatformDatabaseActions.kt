@@ -77,75 +77,19 @@ class AndroidPlatformDatabaseActions(private val context: Context): PlatformData
         val dbFile = context.getDatabasePath("pipepipe.db")
         val appSchemaVersion = AppDatabase.Schema.version.toInt()
 
-        val db = android.database.sqlite.SQLiteDatabase.openDatabase(
-            dbFile.path,
-            null,
-            android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
-        )
-
-        when (importedVersion) {
-            6 -> {
-                db.execSQL(
-                    "UPDATE streams" +
-                            " SET url = REPLACE(url, 'https://bilibili.com', 'https://www.bilibili.com/video')" +
-                            " WHERE url LIKE 'https://bilibili.com/%'"
-                )
-            }
-            7, 8, 9 -> {
-                db.execSQL(
-                    "CREATE TABLE IF NOT EXISTS `playlists_new`" +
-                            "(uid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                            "name TEXT, " +
-                            "display_index INTEGER NOT NULL DEFAULT 0, " +
-                            "thumbnail_url TEXT)"
-                )
-
-                db.execSQL(
-                    "INSERT INTO playlists_new" +
-                            " SELECT p.uid, p.name, p.display_index, s.thumbnail_url " +
-                            " FROM playlists p " +
-                            " LEFT JOIN streams s ON p.thumbnail_stream_id = s.uid"
-                )
-
-                db.execSQL("DROP TABLE playlists")
-                db.execSQL("ALTER TABLE playlists_new RENAME TO playlists")
-                db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS " +
-                            "`index_playlists_name` ON `playlists` (`name`)"
-                )
-
-                db.execSQL(
-                    "CREATE TABLE `remote_playlists_tmp` " +
-                            "(`uid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                            "`service_id` INTEGER NOT NULL, `name` TEXT, `url` TEXT, " +
-                            "`thumbnail_url` TEXT, `uploader` TEXT, " +
-                            "`display_index` INTEGER NOT NULL DEFAULT 0," +
-                            "`stream_count` INTEGER)"
-                )
-                db.execSQL(
-                    "INSERT INTO `remote_playlists_tmp` (`uid`, `service_id`, " +
-                            "`name`, `url`, `thumbnail_url`, `uploader`, `stream_count`)" +
-                            "SELECT `uid`, `service_id`, `name`, `url`, `thumbnail_url`, `uploader`, " +
-                            "`stream_count` FROM `remote_playlists`"
-                )
-
-                db.execSQL("DROP TABLE `remote_playlists`")
-                db.execSQL("ALTER TABLE `remote_playlists_tmp` RENAME TO `remote_playlists`")
-                db.execSQL(
-                    "CREATE INDEX `index_remote_playlists_name` " +
-                            "ON `remote_playlists` (`name`)"
-                )
-                db.execSQL(
-                    "CREATE UNIQUE INDEX `index_remote_playlists_service_id_url` " +
-                            "ON `remote_playlists` (`service_id`, `url`)"
-                )
-            }
-        }
-
+        // If the imported database version is newer than the app's schema version,
+        // we cap the version number to avoid potential crashes or upgrade issues.
+        // The actual migration from older versions is handled automatically by SQLDelight 
+        // when AndroidSqliteDriver is initialized in verifyDatabase().
         if (importedVersion > appSchemaVersion) {
+            val db = android.database.sqlite.SQLiteDatabase.openDatabase(
+                dbFile.path,
+                null,
+                android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
+            )
             db.version = appSchemaVersion
+            db.close()
         }
-        db.close()
     }
 
 }
