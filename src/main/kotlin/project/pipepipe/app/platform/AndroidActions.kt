@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import dev.icerock.moko.resources.desc.desc
 import kotlinx.coroutines.MainScope
@@ -37,7 +36,6 @@ import project.pipepipe.app.service.PlaybackService
 import project.pipepipe.app.service.SleepTimerService
 import project.pipepipe.app.service.StreamsNotificationManager
 import project.pipepipe.app.service.UpdateCheckWorker
-import project.pipepipe.app.uistate.VideoDetailPageState
 import project.pipepipe.shared.infoitem.StreamInfo
 
 class AndroidActions(
@@ -175,7 +173,7 @@ class AndroidActions(
         UpdateCheckWorker.enqueueUpdateCheck(context, isManual)
     }
 
-    override fun enterImmersiveVideoMode(isPortraitVideo: Boolean) {
+    override fun enterFullScreen(isPortraitVideo: Boolean) {
         val activity = context as? Activity ?: return
 
         // Set screen orientation based on video aspect ratio if auto-rotate is disabled
@@ -194,7 +192,7 @@ class AndroidActions(
         }
     }
 
-    override fun exitImmersiveVideoMode() {
+    override fun exitFullScreen(isWideScreen: Boolean) {
         val activity = context as? Activity ?: return
 
         // Check if auto-rotate is disabled
@@ -205,7 +203,15 @@ class AndroidActions(
         ) == 0
 
         if (isAutoRotateDisabled) {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity.requestedOrientation = if (!isWideScreen) {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        } else {
+            if (!isWideScreen) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
         }
     }
 
