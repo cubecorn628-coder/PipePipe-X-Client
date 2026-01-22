@@ -15,6 +15,7 @@ import project.pipepipe.shared.infoitem.SupportedServiceInfo
 import project.pipepipe.shared.job.SupportedJobType
 import project.pipepipe.app.helper.executeJobFlow
 import project.pipepipe.app.helper.SettingsManager
+import project.pipepipe.app.helper.SettingsMigrator
 import project.pipepipe.shared.state.Cache4kSessionManager
 import project.pipepipe.app.viewmodel.VideoDetailViewModel
 import project.pipepipe.app.download.DownloadManager
@@ -88,7 +89,8 @@ class PipePipeApplication : Application() {
         // Schedule streams notification periodic work
         StreamsNotificationManager.schedulePeriodicWork(this)
 
-        // Async initialization
+        // Initialization
+        SettingsMigrator.migrate()
         GlobalScope.launch {
             SharedContext.initializeSupportedServices()
         }
