@@ -1,6 +1,7 @@
 package project.pipepipe.app
 
 import android.app.Application
+import android.content.SharedPreferences
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import kotlinx.coroutines.*
@@ -25,6 +26,8 @@ import com.yausername.ffmpeg.FFmpeg
 import android.util.Log
 import android.content.pm.PackageManager
 import android.os.Build
+import com.russhwolf.settings.SettingsListener
+import com.russhwolf.settings.SharedPreferencesSettings
 import dev.icerock.moko.resources.desc.StringDesc
 import project.pipepipe.app.platform.AndroidPlatformDatabaseActions
 
@@ -42,12 +45,46 @@ class PipePipeApplication : Application() {
             }
             handler?.uncaughtException(thread, throwable)
         }
+        val preferencesName = "${packageName}_preferences"
+        val sharedPrefs = getSharedPreferences(preferencesName, MODE_PRIVATE)
 
         // Initialize SharedContext
         SharedContext.androidVersion = Build.VERSION.SDK_INT
         SharedContext.isTv = packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
         SharedContext.downloader = Downloader(HttpClient(OkHttp))
-        SharedContext.settingsManager = SettingsManager()
+        SharedContext.settingsManager = SettingsManager(
+            onGetStringSet = { key, defaultValue ->
+                // 返回一个不可变的副本或新实例，防止外部修改影响 SharedPreferences 内部缓存
+                sharedPrefs.getStringSet(key, defaultValue)?.toSet() ?: defaultValue
+            },
+            onPutStringSet = { key, value ->
+                // 强制 .toSet() 产生一个新实例，确保 SharedPreferences 识别到变化并正确提交
+                sharedPrefs.edit().putStringSet(key, value.toSet()).apply()
+            },
+            onAddStringSetListener = { key, defaultValue, callback ->
+                var prev = sharedPrefs.getStringSet(key, defaultValue)?.toSet()
+
+                val listener = SharedPreferences.OnSharedPreferenceChangeListener { p, k ->
+                    if (k == key) {
+                        val current = p.getStringSet(key, defaultValue)
+                        // 此时对比的是快照，即使用户手动修改了原来的 Set 引用，这里也能检测到
+                        if (prev != current) {
+                            val nextSnapshot = current?.toSet()
+                            callback(nextSnapshot ?: defaultValue)
+                            prev = nextSnapshot
+                        }
+                    }
+                }
+
+                sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+
+                object : SettingsListener {
+                    override fun deactivate() {
+                        sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener)
+                    }
+                }
+            }
+        )
         SharedContext.sessionManager = Cache4kSessionManager()
         SharedContext.sharedVideoDetailViewModel = VideoDetailViewModel()
         SharedContext.serverRequestHandler = Router::execute
