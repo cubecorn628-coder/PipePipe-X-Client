@@ -24,7 +24,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "project.pipepipe.app"
+        applicationId = "InfinityLoop1309.NewPipeEnhanced"
         minSdk = 26
         targetSdk = 36
         versionCode = 2003
@@ -62,7 +62,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            resValue("string", "app_name", "PipePipe Beta")
+            resValue("string", "app_name", "PipePipe")
         }
         debug {
             isMinifyEnabled = false
