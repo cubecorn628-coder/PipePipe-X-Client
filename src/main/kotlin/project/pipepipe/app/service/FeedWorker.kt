@@ -21,6 +21,7 @@ import kotlinx.coroutines.isActive
 import project.pipepipe.app.MR
 import project.pipepipe.app.SharedContext
 import project.pipepipe.app.database.DatabaseOperations
+import project.pipepipe.app.helper.SupportedServiceHelper
 import project.pipepipe.app.helper.ToastManager
 import project.pipepipe.shared.infoitem.StreamInfo
 import project.pipepipe.shared.job.SupportedJobType
@@ -109,50 +110,69 @@ class FeedWorker(
                     maxConcurrency = 5
                 ) { subscription ->
                     try {
-                        val result = withContext(Dispatchers.IO) {
-                            executeJobFlow(
-                                SupportedJobType.FETCH_INFO,
-                                subscription.url,
-                                subscription.service_id
-                            )
-                        }
-
-                        DatabaseOperations.insertOrUpdateSubscription(result.info!! as ChannelInfo, true)
-
                         var streamInfoList = mutableListOf<StreamInfo>()
+                        if (SharedContext.settingsManager.getBoolean("feed_use_dedicated_fetch_method_key", true)
+                            && SupportedServiceHelper.getSupportedServices().first{ it.serviceId == subscription.service_id }.supportFastFeed) {
+                            val result = withContext(Dispatchers.IO) {
+                                executeJobFlow(
+                                    SupportedJobType.FETCH_FIRST_PAGE,
+                                    "fastfeed://${subscription.url!!.substringAfter("://")}",
+                                    subscription.service_id
+                                )
+                            }
+                            if (result.pagedData != null) {
+                                streamInfoList.addAll(result.pagedData!!.itemList as List<StreamInfo>)
+                            }
+                            if (streamInfoList.isNotEmpty()) {
+                                DatabaseOperations.updateSubscriptionFeed(
+                                    subscription.url!!,
+                                    streamInfoList
+                                )
+                            }
+                        } else {
+                            val result = withContext(Dispatchers.IO) {
+                                executeJobFlow(
+                                    SupportedJobType.FETCH_INFO,
+                                    subscription.url,
+                                    subscription.service_id
+                                )
+                            }
 
-                        if (result.pagedData != null) {
-                            streamInfoList.addAll(result.pagedData!!.itemList as List<StreamInfo>)
-                        }
+                            DatabaseOperations.insertOrUpdateSubscription(result.info!! as ChannelInfo, true)
 
-                        val channelInfo = result.info as ChannelInfo
-                        val fetchChannelTabs = SharedContext.settingsManager.getStringSet("feed_fetch_channel_tabs_key", setOf("fetch_channel_tabs_videos"))
-                        if (!fetchChannelTabs.contains("fetch_channel_tabs_videos")) {
-                            streamInfoList.clear()
-                        }
-                        val fetchLiveTabs = fetchChannelTabs.contains("fetch_channel_tabs_live")
+                            if (result.pagedData != null) {
+                                streamInfoList.addAll(result.pagedData!!.itemList as List<StreamInfo>)
+                            }
 
-                        if (fetchLiveTabs) {
-                            val liveTab = channelInfo.tabs.find { it.type.name == "LIVE" }
-                            if (liveTab != null) {
-                                val liveResult = withContext(Dispatchers.IO) {
-                                    executeJobFlow(
-                                        SupportedJobType.FETCH_FIRST_PAGE,
-                                        liveTab.url,
-                                        subscription.service_id
-                                    )
-                                }
-                                if (liveResult.pagedData != null) {
-                                    streamInfoList.addAll(liveResult.pagedData!!.itemList as List<StreamInfo>)
+                            val channelInfo = result.info as ChannelInfo
+                            val fetchChannelTabs = SharedContext.settingsManager.getStringSet("feed_fetch_channel_tabs_key", setOf("fetch_channel_tabs_videos"))
+                            if (!fetchChannelTabs.contains("fetch_channel_tabs_videos")) {
+                                streamInfoList.clear()
+                            }
+                            val fetchLiveTabs = fetchChannelTabs.contains("fetch_channel_tabs_live")
+
+                            if (fetchLiveTabs) {
+                                val liveTab = channelInfo.tabs.find { it.type.name == "LIVE" }
+                                if (liveTab != null) {
+                                    val liveResult = withContext(Dispatchers.IO) {
+                                        executeJobFlow(
+                                            SupportedJobType.FETCH_FIRST_PAGE,
+                                            liveTab.url,
+                                            subscription.service_id
+                                        )
+                                    }
+                                    if (liveResult.pagedData != null) {
+                                        streamInfoList.addAll(liveResult.pagedData!!.itemList as List<StreamInfo>)
+                                    }
                                 }
                             }
-                        }
 
-                        if (streamInfoList.isNotEmpty()) {
-                            DatabaseOperations.updateSubscriptionFeed(
-                                subscription.url!!,
-                                streamInfoList
-                            )
+                            if (streamInfoList.isNotEmpty()) {
+                                DatabaseOperations.updateSubscriptionFeed(
+                                    subscription.url!!,
+                                    streamInfoList
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
