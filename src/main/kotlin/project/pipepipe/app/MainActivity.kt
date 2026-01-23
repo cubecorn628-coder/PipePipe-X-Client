@@ -123,8 +123,9 @@ class MainActivity : ComponentActivity() {
 
             // Function to check and trigger dialogs based on settings
             val checkAndTriggerDialogs = {
-                val isFirstRun = SharedContext.settingsManager.getInt("isFirstRun", 0)
-                if (isFirstRun == 0) {
+                SharedContext.settingsManager.putInt("isFirstRun", 1)
+                val hasCheckedNotification = SharedContext.settingsManager.getBoolean("has_checked_notification", false)
+                if (!hasCheckedNotification) {
                     val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
                     } else {
@@ -275,7 +276,7 @@ class MainActivity : ComponentActivity() {
                                 FirstRunDialog(
                                     onDismiss = {
                                         showFirstRunDialog = false
-                                        SharedContext.settingsManager.putBoolean("isFirstRun", false)
+                                        SharedContext.settingsManager.putBoolean("has_checked_notification", true)
                                     },
                                     onEnableNotifications = {
                                         ActivityCompat.requestPermissions(
@@ -284,7 +285,7 @@ class MainActivity : ComponentActivity() {
                                             REQUEST_NOTIFICATION_PERMISSION
                                         )
                                         showFirstRunDialog = false
-                                        SharedContext.settingsManager.putBoolean("isFirstRun", false)
+                                        SharedContext.settingsManager.putBoolean("has_checked_notification", true)
                                     }
                                 )
                             }
