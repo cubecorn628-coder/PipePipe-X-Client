@@ -209,10 +209,6 @@ class AndroidActions(
             } else {
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
-        } else {
-            if (!isWideScreen) {
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
         }
     }
 

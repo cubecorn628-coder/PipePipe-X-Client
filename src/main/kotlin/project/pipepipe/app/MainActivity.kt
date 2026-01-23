@@ -3,10 +3,16 @@ package project.pipepipe.app
 import android.Manifest
 import android.app.AlertDialog
 import android.app.PictureInPictureParams
+import android.content.ContentResolver
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.database.ContentObserver
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.util.Rational
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -61,6 +67,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private var openPlayQueueFromIntent = false
     private var minimizeOnExitKeyListener: com.russhwolf.settings.SettingsListener? = null
+    private var autoRotateContentObserver: ContentObserver? = null
+    private var previousAutoRotateState = false
 
     companion object {
         private const val REQUEST_NOTIFICATION_PERMISSION = 1001
@@ -98,6 +106,8 @@ class MainActivity : ComponentActivity() {
         SharedContext.platformMenuItems = AndroidMenuItems()
 
         setupMinimizeOnExitListener()
+
+        setupAutoRotateListener()
 
 
         composeView.setContent {
@@ -455,10 +465,9 @@ class MainActivity : ComponentActivity() {
     /**
      * Enter Picture-in-Picture mode with the specified aspect ratio
      */
-    fun enterPipMode(isPortrait: Boolean = false): Boolean {
-        val aspectRatio: Rational = if (!isPortrait) Rational(16, 9) else Rational(9, 16)
+    fun enterPipMode(): Boolean {
         val params = PictureInPictureParams.Builder()
-            .setAspectRatio(aspectRatio)
+            .setAspectRatio(Rational(16, 9))
             .build()
         return enterPictureInPictureMode(params)
     }
@@ -520,12 +529,12 @@ class MainActivity : ComponentActivity() {
 
     private fun handleExitPip() {
         SharedContext.exitPipMode()
-        val currentMediaId = SharedContext.platformMediaController?.currentMediaItem?.value?.mediaId
-        if (SharedContext.sharedVideoDetailViewModel.uiState.value.currentStreamInfo?.url == currentMediaId) {
-            SharedContext.sharedVideoDetailViewModel.showAsDetailPage()
-        } else {
-            SharedContext.sharedVideoDetailViewModel.showAsBottomPlayer()
-        }
+//        val currentMediaId = SharedContext.platformMediaController?.currentMediaItem?.value?.mediaId
+//        if (SharedContext.sharedVideoDetailViewModel.uiState.value.currentStreamInfo?.url == currentMediaId) {
+//            SharedContext.sharedVideoDetailViewModel.showAsDetailPage()
+//        } else {
+//            SharedContext.sharedVideoDetailViewModel.showAsBottomPlayer()
+//        }
     }
 
 
@@ -617,6 +626,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         minimizeOnExitKeyListener?.deactivate()
+        autoRotateContentObserver?.let { contentResolver.unregisterContentObserver(it) }
     }
 
     // Note: onDestroy no longer needs to release controllerFuture because
@@ -647,6 +657,36 @@ class MainActivity : ComponentActivity() {
 
         navigationView.itemIconTintList = iconTint
         navigationView.itemTextColor = textColor
+    }
+
+    private fun setupAutoRotateListener() {
+        previousAutoRotateState = Settings.System.getInt(
+            contentResolver,
+            Settings.System.ACCELEROMETER_ROTATION,
+            0
+        ) == 1
+
+        autoRotateContentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                val currentAutoRotate = Settings.System.getInt(
+                    contentResolver,
+                    Settings.System.ACCELEROMETER_ROTATION,
+                    0
+                ) == 1
+
+                if (!previousAutoRotateState && currentAutoRotate) {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                }
+
+                previousAutoRotateState = currentAutoRotate
+            }
+        }
+
+        contentResolver.registerContentObserver(
+            Settings.System.getUriFor(Settings.System.ACCELEROMETER_ROTATION),
+            false,
+            autoRotateContentObserver!!
+        )
     }
 
 }
