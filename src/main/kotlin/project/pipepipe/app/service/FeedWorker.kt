@@ -153,9 +153,6 @@ class FeedWorker(
                                 subscription.url!!,
                                 streamInfoList
                             )
-                        } else {
-                            failedCount.incrementAndGet()
-                            subscription.name?.let { failedChannels.add(it) }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
