@@ -27,8 +27,8 @@ android {
         applicationId = "InfinityLoop1309.NewPipeEnhanced"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2003
-        versionName = "5.0.0-beta5-pre"
+        versionCode = 2004
+        versionName = "5.0.0-rc"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
