@@ -107,7 +107,6 @@ class FeedWorker(
                 processSubscriptionsConcurrently(
                     subscriptions = subscriptions,
                     serviceFetchIntervals = serviceFetchIntervals,
-                    maxConcurrency = 5
                 ) { subscription ->
                     try {
                         var streamInfoList = mutableListOf<StreamInfo>()

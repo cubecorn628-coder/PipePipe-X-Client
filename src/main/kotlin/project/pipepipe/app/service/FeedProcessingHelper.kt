@@ -36,7 +36,7 @@ fun loadServiceFetchIntervals(): Map<Int, Int> {
 suspend fun processSubscriptionsConcurrently(
     subscriptions: List<Subscriptions>,
     serviceFetchIntervals: Map<Int, Int>,
-    maxConcurrency: Int = 5,
+    maxConcurrency: Int = 8,
     processOne: suspend (Subscriptions) -> Unit
 ) {
     // Group subscriptions by service_id

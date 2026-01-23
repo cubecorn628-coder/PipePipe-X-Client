@@ -66,7 +66,6 @@ class StreamsNotificationWorker(
             processSubscriptionsConcurrently(
                 subscriptions = subscriptions,
                 serviceFetchIntervals = serviceFetchIntervals,
-                maxConcurrency = 6
             ) { subscription ->
                 try {
                     val result = withContext(Dispatchers.IO) {
