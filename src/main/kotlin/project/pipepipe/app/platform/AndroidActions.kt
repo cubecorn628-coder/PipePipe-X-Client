@@ -66,12 +66,13 @@ class AndroidActions(
     override fun enterPictureInPicture(streamInfo: StreamInfo) {
         val activity = context as? MainActivity ?: return
         MainScope().launch {
-            SharedContext.sharedVideoDetailViewModel.loadVideoDetails(streamInfo.url, streamInfo.serviceId, shouldKeepPlaybackMode = true)
+            SharedContext.sharedVideoDetailViewModel.loadVideoDetails(streamInfo.url, streamInfo.serviceId,
+                shouldKeepPlaybackMode = true, shouldNotChangePageState = true)
             SharedContext.enterPipmode()
             SharedContext.updatePlaybackMode(PlaybackMode.VIDEO_AUDIO)
             SharedContext.platformMediaController?.playFromStreamInfo(streamInfo)
             SharedContext.sharedVideoDetailViewModel.showAsFullscreenPlayer()
-            activity.enterPipMode(streamInfo.isPortrait)
+            activity.enterPipMode()
         }
     }
 
