@@ -524,9 +524,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Listen for playbackMode changes
+        lifecycleScope.launch {
+            SharedContext.playbackMode.collect { _ ->
+                updatePipAutoEnterBasedOnConditions()
+            }
+        }
+
         // Initial update
         updatePipAutoEnterBasedOnConditions()
     }
+
+    private var lastPipAutoEnterState = false
 
     private fun updatePipAutoEnterBasedOnConditions() {
         val minimizeSetting = SharedContext.settingsManager.getString(
@@ -541,8 +550,14 @@ class MainActivity : ComponentActivity() {
 
         val isPlaying = SharedContext.platformMediaController?.isPlaying?.value == true
 
-        // Only enable if all three conditions are satisfied
-        updatePipAutoEnter(shouldEnable && isCorrectPageState && isPlaying)
+        val isVideoMode = SharedContext.playbackMode.value == PlaybackMode.VIDEO_AUDIO
+
+        // Only enable if all four conditions are satisfied
+        val newState = shouldEnable && isCorrectPageState && isPlaying && isVideoMode
+        if (newState != lastPipAutoEnterState) {
+            lastPipAutoEnterState = newState
+            updatePipAutoEnter(newState)
+        }
     }
 
     private fun handleExitPip() {
