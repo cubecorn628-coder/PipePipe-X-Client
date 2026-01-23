@@ -46,20 +46,27 @@ suspend fun processSubscriptionsConcurrently(
     val globalSemaphore = Semaphore(maxConcurrency)
 
     coroutineScope {
-        // Process each service group concurrently
-        subscriptionsByService.map { (serviceId, serviceSubscriptions) ->
-            async(Dispatchers.IO) {
-                val fetchInterval = serviceFetchIntervals[serviceId] ?: 0
+        // Process subscriptions
+        subscriptionsByService.flatMap { (serviceId, serviceSubscriptions) ->
+            val fetchInterval = serviceFetchIntervals[serviceId] ?: 0
 
-                // Within each service, process serially with delay
-                serviceSubscriptions.forEach { subscription ->
-                    globalSemaphore.withPermit {
-                        processOne(subscription)
-                    }
-
-                    // Wait for service-specific interval before next request
-                    if (fetchInterval > 0) {
+            if (fetchInterval > 0) {
+                // For services with intervals, process serially within the service group
+                listOf(async(Dispatchers.IO) {
+                    serviceSubscriptions.forEach { subscription ->
+                        globalSemaphore.withPermit {
+                            processOne(subscription)
+                        }
                         delay(fetchInterval.toLong())
+                    }
+                })
+            } else {
+                // For services without intervals, process all subscriptions concurrently
+                serviceSubscriptions.map { subscription ->
+                    async(Dispatchers.IO) {
+                        globalSemaphore.withPermit {
+                            processOne(subscription)
+                        }
                     }
                 }
             }
