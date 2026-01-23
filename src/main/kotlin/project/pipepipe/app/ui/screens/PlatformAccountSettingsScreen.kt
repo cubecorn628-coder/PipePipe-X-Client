@@ -120,7 +120,7 @@ fun AccountSettingsScreen(
                 key = "youtube_login",
                 title = loginTitle,
                 summary = loginYoutubeSummary,
-                enabled = !youtubeLoggedIn,
+                enabled = false,
                 onClick = { showLoginWebView = LoginPlatform.YOUTUBE }
             ))
 
@@ -128,7 +128,7 @@ fun AccountSettingsScreen(
                 PreferenceItem.ClickablePref(
                 key = "youtube_logout",
                 title = logoutTitle,
-                enabled = youtubeLoggedIn,
+                enabled = false,
                 onClick = {
                     CookieManager.removeLoggedInCookie(0)
                     youtubeLoggedIn = false
