@@ -6,6 +6,7 @@ import android.app.PictureInPictureParams
 import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.ContentObserver
 import android.os.Build
@@ -15,6 +16,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Rational
 import android.widget.TextView
+import androidx.core.app.NotificationManagerCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateDpAsState
@@ -123,7 +125,14 @@ class MainActivity : ComponentActivity() {
             val checkAndTriggerDialogs = {
                 val isFirstRun = SharedContext.settingsManager.getInt("isFirstRun", 0)
                 if (isFirstRun == 0) {
-                    showFirstRunDialog = true
+                    val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                    } else {
+                        NotificationManagerCompat.from(this@MainActivity).areNotificationsEnabled()
+                    }
+                    if (!hasNotificationPermission) {
+                        showFirstRunDialog = true
+                    }
                 }
 
                 val storedVersionCode = SharedContext.settingsManager.getInt("version_code", 0)
