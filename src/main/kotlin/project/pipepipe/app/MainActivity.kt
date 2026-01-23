@@ -115,16 +115,31 @@ class MainActivity : ComponentActivity() {
             SharedContext.navController = navController
             val toastMessage by ToastManager.message.collectAsState()
 
-            // Dialog state management
-            var showDataMigrationDialog by remember { mutableStateOf(false) }
-            var showErrorHandlingDialog by remember { mutableStateOf(false) }
             var showFirstRunDialog by remember { mutableStateOf(false) }
+            var showUpdateLogDialog by remember { mutableStateOf(false) }
+            var showDonationDialog by remember { mutableStateOf(false) }
 
             // Function to check and trigger dialogs based on settings
             val checkAndTriggerDialogs = {
-                val isFirstRun = SharedContext.settingsManager.getBoolean("is_first_run", true)
-                if (isFirstRun) {
-                    showDataMigrationDialog = true
+                val isFirstRun = SharedContext.settingsManager.getInt("isFirstRun", 0)
+                if (isFirstRun == 0) {
+                    showFirstRunDialog = true
+                }
+
+                val storedVersionCode = SharedContext.settingsManager.getInt("version_code", 0)
+                val lastShowDonationTime = SharedContext.settingsManager.getLong("last_show_donation_time", 0)
+                val currentTime = System.currentTimeMillis()
+                val currentVersionCode = 200300
+                if (currentVersionCode > storedVersionCode) {
+                    showUpdateLogDialog = true
+
+                    if ((storedVersionCode / 100 < 1088 && currentTime - lastShowDonationTime > 14 * 24 * 60 * 60 * 1000)
+                        || currentTime - lastShowDonationTime > 30L * 24 * 60 * 60 * 1000) {
+                        SharedContext.settingsManager.putLong("last_show_donation_time", currentTime)
+                        showDonationDialog = true
+                    }
+
+                    SharedContext.settingsManager.putInt("version_code", currentVersionCode)
                 }
             }
             val sponsorBlockNames = SponsorBlockCategory.entries.map { SponsorBlockHelper.getCategoryName(it) }
@@ -246,40 +261,12 @@ class MainActivity : ComponentActivity() {
                                 Toast(message = message)
                             }
 
-
-                            // Data migration dialog - shown after welcome dialog
-                            if (showDataMigrationDialog) {
-                                DataMigrationDialog(
-                                    onDismiss = {
-                                        showDataMigrationDialog = false
-                                        // After data migration dialog, show error handling dialog
-                                        showErrorHandlingDialog = true
-                                    }
-                                )
-                            }
-
-                            // Error handling dialog - shown after data migration dialog
-                            if (showErrorHandlingDialog) {
-                                ErrorHandlingDialog(
-                                    onDismiss = {
-                                        showErrorHandlingDialog = false
-                                        // After error handling dialog, show notification dialog only on Android 13+
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            showFirstRunDialog = true
-                                        } else {
-                                            // On Android 12 and below, notifications don't require runtime permission
-                                            SharedContext.settingsManager.putBoolean("is_first_run", false)
-                                        }
-                                    }
-                                )
-                            }
-
                             // Notification permission dialog - shown after error handling dialog (Android 13+ only)
                             if (showFirstRunDialog) {
                                 FirstRunDialog(
                                     onDismiss = {
                                         showFirstRunDialog = false
-                                        SharedContext.settingsManager.putBoolean("is_first_run", false)
+                                        SharedContext.settingsManager.putBoolean("isFirstRun", false)
                                     },
                                     onEnableNotifications = {
                                         ActivityCompat.requestPermissions(
@@ -288,7 +275,29 @@ class MainActivity : ComponentActivity() {
                                             REQUEST_NOTIFICATION_PERMISSION
                                         )
                                         showFirstRunDialog = false
-                                        SharedContext.settingsManager.putBoolean("is_first_run", false)
+                                        SharedContext.settingsManager.putBoolean("isFirstRun", false)
+                                    }
+                                )
+                            }
+
+                            // Update log dialog
+                            if (showUpdateLogDialog) {
+                                UpdateLogDialog(
+                                    onDismiss = {
+                                        showUpdateLogDialog = false
+                                    }
+                                )
+                            }
+
+                            // Donation dialog - shown after update log dialog
+                            if (showDonationDialog) {
+                                DonationDialog(
+                                    onDismiss = {
+                                        showDonationDialog = false
+                                    },
+                                    onBecomeSupporter = {
+                                        SharedContext.platformActions.openUrl("https://ko-fi.com/pipepipe")
+                                        showDonationDialog = false
                                     }
                                 )
                             }
