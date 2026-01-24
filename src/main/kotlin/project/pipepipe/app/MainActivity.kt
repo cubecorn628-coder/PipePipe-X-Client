@@ -563,12 +563,12 @@ class MainActivity : ComponentActivity() {
 
     private fun handleExitPip() {
         SharedContext.exitPipMode()
-//        val currentMediaId = SharedContext.platformMediaController?.currentMediaItem?.value?.mediaId
-//        if (SharedContext.sharedVideoDetailViewModel.uiState.value.currentStreamInfo?.url == currentMediaId) {
-//            SharedContext.sharedVideoDetailViewModel.showAsDetailPage()
-//        } else {
-//            SharedContext.sharedVideoDetailViewModel.showAsBottomPlayer()
-//        }
+        val currentMediaId = SharedContext.platformMediaController?.currentMediaItem?.value?.mediaId
+        if (SharedContext.sharedVideoDetailViewModel.uiState.value.currentStreamInfo?.url == currentMediaId) {
+            SharedContext.sharedVideoDetailViewModel.showAsDetailPage()
+        } else {
+            SharedContext.sharedVideoDetailViewModel.showAsBottomPlayer()
+        }
     }
 
 
@@ -578,6 +578,10 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
+            if (!SharedContext.isInPipMode.value) {
+                SharedContext.enterPipmode()
+                SharedContext.sharedVideoDetailViewModel.showAsFullscreenPlayer()
+            }
             wasInPipMode = true
         } else if (wasInPipMode) {
             // User returned to app by clicking fullscreen button
