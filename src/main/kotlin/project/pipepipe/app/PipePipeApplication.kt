@@ -1,35 +1,36 @@
 package project.pipepipe.app
 
 import android.app.Application
+import android.app.UiModeManager
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.os.BatteryManager
+import android.os.Build
+import android.util.Log
+import com.russhwolf.settings.SettingsListener
+import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
+import dev.icerock.moko.resources.desc.StringDesc
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
-import kotlinx.coroutines.*
-import kotlinx.serialization.json.Json
-import project.pipepipe.extractor.Router
-import project.pipepipe.app.mediasource.MediaCacheProvider
-import project.pipepipe.app.service.NotificationHelper
-import project.pipepipe.app.service.StreamsNotificationManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import project.pipepipe.app.database.DatabaseOperations
-import project.pipepipe.shared.downloader.Downloader
-import project.pipepipe.shared.infoitem.SupportedServiceInfo
-import project.pipepipe.shared.job.SupportedJobType
-import project.pipepipe.app.helper.executeJobFlow
-import project.pipepipe.app.helper.SettingsManager
-import project.pipepipe.app.helper.SettingsMigrator
-import project.pipepipe.shared.state.Cache4kSessionManager
-import project.pipepipe.app.viewmodel.VideoDetailViewModel
 import project.pipepipe.app.download.DownloadManager
 import project.pipepipe.app.download.DownloadManagerHolder
-import com.yausername.youtubedl_android.YoutubeDL
-import com.yausername.ffmpeg.FFmpeg
-import android.util.Log
-import android.content.pm.PackageManager
-import android.os.Build
-import com.russhwolf.settings.SettingsListener
-import com.russhwolf.settings.SharedPreferencesSettings
-import dev.icerock.moko.resources.desc.StringDesc
+import project.pipepipe.app.helper.SettingsManager
+import project.pipepipe.app.helper.SettingsMigrator
+import project.pipepipe.app.mediasource.MediaCacheProvider
 import project.pipepipe.app.platform.AndroidPlatformDatabaseActions
+import project.pipepipe.app.service.NotificationHelper
+import project.pipepipe.app.service.StreamsNotificationManager
+import project.pipepipe.app.viewmodel.VideoDetailViewModel
+import project.pipepipe.extractor.Router
+import project.pipepipe.shared.downloader.Downloader
+import project.pipepipe.shared.state.Cache4kSessionManager
+
 
 class PipePipeApplication : Application() {
     override fun onCreate() {
@@ -50,7 +51,7 @@ class PipePipeApplication : Application() {
 
         // Initialize SharedContext
         SharedContext.androidVersion = Build.VERSION.SDK_INT
-        SharedContext.isTv = packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+        SharedContext.isTv = isTV()
         SharedContext.downloader = Downloader(HttpClient(OkHttp))
         SharedContext.settingsManager = SettingsManager(
             onGetStringSet = { key, defaultValue ->
@@ -126,5 +127,23 @@ class PipePipeApplication : Application() {
         GlobalScope.launch {
             SharedContext.initializeSupportedServices()
         }
+    }
+    fun isTV(): Boolean {
+        return try{
+            val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager?
+            uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+                    || packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+                    || packageManager.hasSystemFeature("amazon.hardware.fire_tv")
+                    ||
+                    (isBatteryAbsent() && !packageManager.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+                            && packageManager.hasSystemFeature(PackageManager.FEATURE_USB_HOST)
+                            && packageManager.hasSystemFeature(PackageManager.FEATURE_ETHERNET))
+        } catch (e: Exception) {
+            false
+        }
+    }
+    fun isBatteryAbsent(): Boolean {
+        val bm = getSystemService(BATTERY_SERVICE) as? BatteryManager
+        return (bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: 0) == 0
     }
 }
