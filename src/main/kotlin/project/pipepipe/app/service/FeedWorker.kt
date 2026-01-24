@@ -110,7 +110,7 @@ class FeedWorker(
                 ) { subscription ->
                     try {
                         var streamInfoList = mutableListOf<StreamInfo>()
-                        if (SharedContext.settingsManager.getBoolean("feed_use_dedicated_fetch_method_key", true)
+                        if (SharedContext.settingsManager.getBoolean("feed_use_dedicated_fetch_method_key", false)
                             && SupportedServiceHelper.getSupportedServices().first{ it.serviceId == subscription.service_id }.supportFastFeed) {
                             val result = withContext(Dispatchers.IO) {
                                 executeJobFlow(
