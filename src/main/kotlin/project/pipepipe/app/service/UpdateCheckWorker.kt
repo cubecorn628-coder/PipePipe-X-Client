@@ -108,7 +108,7 @@ class UpdateCheckWorker(
     }
 
     companion object {
-        private const val GITHUB_API_URL = "https://api.github.com/repos/InfinityLoop1308/PipePipe/releases"
+        private const val GITHUB_API_URL = "https://api.github.com/repos/InfinityLoop1308/PipePipe-X/releases"
         private const val IS_MANUAL = "isManual"
         private const val UPDATE_NOTIFICATION_ID = 3000
 
