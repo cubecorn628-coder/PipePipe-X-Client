@@ -175,6 +175,7 @@ class AndroidActions(
     }
 
     override fun enterFullScreen(isPortraitVideo: Boolean) {
+        if (SharedContext.isTv) return
         val activity = context as? Activity ?: return
 
         // Set screen orientation based on video aspect ratio if auto-rotate is disabled
@@ -194,6 +195,7 @@ class AndroidActions(
     }
 
     override fun exitFullScreen(isWideScreen: Boolean) {
+        if (SharedContext.isTv) return
         val activity = context as? Activity ?: return
 
         // Check if auto-rotate is disabled
