@@ -62,18 +62,18 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            resValue("string", "app_name", "PipePipe")
+            resValue("string", "app_name", "PipePipe X")
         }
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             isDebuggable = true
-            resValue("string", "app_name", "PipePipe Debug")
+            resValue("string", "app_name", "PipePipe X Debug")
         }
         create("nightly") {
             initWith(getByName("release"))
             applicationIdSuffix = ".nightly"
-            resValue("string", "app_name", "PipePipe Nightly")
+            resValue("string", "app_name", "PipePipe X Nightly")
             signingConfig = signingConfigs.getByName("nightly")
             matchingFallbacks += listOf("release")
         }
@@ -106,11 +106,11 @@ android {
             val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             val abiFilter = outputImpl.getFilter(com.android.build.OutputFile.ABI)
             if (abiFilter != null) {
-                outputImpl.outputFileName = "PipePipe-${versionName}-${abiFilter}-${buildType.name}.apk"
+                outputImpl.outputFileName = "PipePipeX-${versionName}-${abiFilter}-${buildType.name}.apk"
                 val abiCode = abiCodesMap[abiFilter] as? Int ?: 0
                 (outputImpl as com.android.build.gradle.api.ApkVariantOutput).versionCodeOverride = 100 * baseVersionCode + abiCode
             } else {
-                outputImpl.outputFileName = "PipePipe-${versionName}-universal-${buildType.name}.apk"
+                outputImpl.outputFileName = "PipePipeX-${versionName}-universal-${buildType.name}.apk"
                 (outputImpl as com.android.build.gradle.api.ApkVariantOutput).versionCodeOverride = 100 * baseVersionCode
             }
         }
