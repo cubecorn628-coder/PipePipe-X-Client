@@ -480,7 +480,8 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (!player.playWhenReady || player.playbackState == Player.STATE_IDLE) {
+        super.onTaskRemoved(rootIntent)
+        if (playbackMode.value == PlaybackMode.VIDEO_AUDIO && player.isPlaying) {
             stopSelf()
         }
     }
