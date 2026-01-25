@@ -136,20 +136,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val storedVersionCode = SharedContext.settingsManager.getInt("version_code", 0)
+                val storedVersionCode = SharedContext.settingsManager.getInt("version_code_x", 0)
                 val lastShowDonationTime = SharedContext.settingsManager.getLong("last_show_donation_time", 0)
                 val currentTime = System.currentTimeMillis()
-                val currentVersionCode = 200500
+                val currentVersionCode = 100000
                 if (currentVersionCode > storedVersionCode) {
 //                    showUpdateLogDialog = true
 
-                    if ((storedVersionCode / 100 < 2005 && currentTime - lastShowDonationTime > 14 * 24 * 60 * 60 * 1000)
+                    if ((storedVersionCode / 100 < 1000 && currentTime - lastShowDonationTime > 14 * 24 * 60 * 60 * 1000)
                         || currentTime - lastShowDonationTime > 30L * 24 * 60 * 60 * 1000) {
                         SharedContext.settingsManager.putLong("last_show_donation_time", currentTime)
                         showDonationDialog = true
                     }
 
-                    SharedContext.settingsManager.putInt("version_code", currentVersionCode)
+                    SharedContext.settingsManager.putInt("version_code_x", currentVersionCode)
                 }
             }
             val sponsorBlockNames = SponsorBlockCategory.entries.map { SponsorBlockHelper.getCategoryName(it) }
