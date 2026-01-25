@@ -140,7 +140,7 @@ class MainActivity : ComponentActivity() {
                 val lastShowDonationTime = SharedContext.settingsManager.getLong("last_show_donation_time", 0)
                 val currentTime = System.currentTimeMillis()
                 val currentVersionCode = 200300
-                if (false) {
+                if (currentVersionCode > storedVersionCode) {
                     showUpdateLogDialog = true
 
                     if ((storedVersionCode / 100 < 1088 && currentTime - lastShowDonationTime > 14 * 24 * 60 * 60 * 1000)
