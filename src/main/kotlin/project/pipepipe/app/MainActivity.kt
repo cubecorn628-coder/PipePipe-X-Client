@@ -141,7 +141,7 @@ class MainActivity : ComponentActivity() {
                 val currentTime = System.currentTimeMillis()
                 val currentVersionCode = 200500
                 if (currentVersionCode > storedVersionCode) {
-                    showUpdateLogDialog = true
+//                    showUpdateLogDialog = true
 
                     if ((storedVersionCode / 100 < 2005 && currentTime - lastShowDonationTime > 14 * 24 * 60 * 60 * 1000)
                         || currentTime - lastShowDonationTime > 30L * 24 * 60 * 60 * 1000) {
