@@ -24,11 +24,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "InfinityLoop1309.NewPipeEnhanced"
+        applicationId = "project.pipepipe.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2004
-        versionName = "5.0.0-rc"
+        versionCode = 2005
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
