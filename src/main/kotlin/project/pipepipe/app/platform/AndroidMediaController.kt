@@ -373,7 +373,7 @@ class AndroidMediaController(
         val resolutions = _availableResolutions.value
 
         fun findClosestNotExceeding(targetMinDimension: Int): ResolutionInfo? {
-            return resolutions.find { min(it.width, it.height) <= targetMinDimension }
+            return resolutions.find { it.resolutionPixel.removeSuffix("p").toInt() <= targetMinDimension }
         }
 
         val targetResolution = when (defaultResolution) {
