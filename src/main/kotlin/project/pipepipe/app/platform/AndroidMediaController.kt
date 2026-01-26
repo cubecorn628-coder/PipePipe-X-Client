@@ -39,6 +39,7 @@ import project.pipepipe.app.service.PlaybackService
 import project.pipepipe.app.service.stopService
 import project.pipepipe.app.uistate.VideoDetailPageState
 import project.pipepipe.shared.infoitem.StreamInfo
+import kotlin.math.min
 
 /**
  * Android implementation of PlatformMediaController.
@@ -371,13 +372,17 @@ class AndroidMediaController(
     override fun applyDefaultResolution(defaultResolution: String) {
         val resolutions = _availableResolutions.value
 
+        fun findClosestNotExceeding(targetMinDimension: Int): ResolutionInfo? {
+            return resolutions.find { min(it.width, it.height) <= targetMinDimension }
+        }
+
         val targetResolution = when (defaultResolution) {
             "best" -> resolutions.firstOrNull()
             "lowest" -> resolutions.lastOrNull()
-            "1080p" -> resolutions.find { it.resolutionPixel == "1080p" }
-            "720p" -> resolutions.find { it.resolutionPixel == "720p" }
-            "480p" -> resolutions.find { it.resolutionPixel == "480p" }
-            "360p" -> resolutions.find { it.resolutionPixel == "360p" }
+            "1080p" -> findClosestNotExceeding(1080)
+            "720p" -> findClosestNotExceeding(720)
+            "480p" -> findClosestNotExceeding(480)
+            "360p" -> findClosestNotExceeding(360)
             else -> null
         }
 
