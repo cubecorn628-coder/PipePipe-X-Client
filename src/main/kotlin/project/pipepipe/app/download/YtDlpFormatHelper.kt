@@ -10,14 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.w3c.dom.Element
 import project.pipepipe.app.SharedContext
-import project.pipepipe.app.helper.CookieManager
 import project.pipepipe.app.helper.FormatHelper
-import project.pipepipe.app.helper.isLoggedInCookie
 import project.pipepipe.app.ui.component.Format
-import project.pipepipe.shared.utils.json.requireString
 import java.io.ByteArrayInputStream
 import javax.xml.parsers.DocumentBuilderFactory
-import kotlin.math.min
 
 /**
  * Helper class to fetch video formats using yt-dlp's --dump-json command
@@ -61,7 +57,7 @@ object YtDlpFormatHelper {
             return when {
                 hasVideo() && hasAudio() -> {
                     // Combined format (video + audio)
-                    val resolution = runCatching{ "${min(height!!, width!!)}p"}.getOrDefault("Unknown")
+                    val resolution = FormatHelper.calculateResolutionPixel(height, width)
                     val codec = FormatHelper.parseCodecName(vcodec)
                     val audioCodec = FormatHelper.parseCodecName(acodec)
                     val fpsLabel = fps?.let { if (it > 30) " ${it.toInt()}fps" else "" } ?: ""
@@ -69,7 +65,7 @@ object YtDlpFormatHelper {
                 }
                 isVideoOnly() -> {
                     // Video only
-                    val resolution = runCatching{ "${min(height!!, width!!)}p"}.getOrDefault("Unknown")
+                    val resolution = FormatHelper.calculateResolutionPixel(height, width)
                     val codec = FormatHelper.parseCodecName(vcodec)
                     val fpsLabel = fps?.let { if (it > 30) " ${it.toInt()}fps" else "" } ?: ""
                     val baseLabel = FormatHelper.formatVideoLabel(codec, resolution, fps ?: 0f)
@@ -233,12 +229,13 @@ object YtDlpFormatHelper {
 
                     when (contentType) {
                         "video" -> {
-                            val height = rep.getAttribute("height").toIntOrNull() ?: 0
+                            val height = rep.getAttribute("height").toIntOrNull()!!
+                            val width = rep.getAttribute("width").toIntOrNull()
                             val frameRate = rep.getAttribute("frameRate").toFloatOrNull() ?: 0f
                             val codecName = FormatHelper.parseCodecName(codecs)
                             val isHDR = codecs.contains("vp9.2", ignoreCase = true) ||
                                     Regex("av01\\.0\\.(09|1[0-3])M", RegexOption.IGNORE_CASE).containsMatchIn(codecs)
-                            val displayLabel = FormatHelper.formatVideoLabel(codecName, "${height}p", frameRate) + if (isHDR) " HDR" else ""
+                            val displayLabel = FormatHelper.formatVideoLabel(codecName, FormatHelper.calculateResolutionPixel(height, width), frameRate) + if (isHDR) " HDR" else ""
 
                             videoFormats.add(
                                 Format(
