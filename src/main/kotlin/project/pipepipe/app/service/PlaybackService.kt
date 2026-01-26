@@ -481,15 +481,11 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        if (playbackMode.value == PlaybackMode.VIDEO_AUDIO && player.isPlaying) {
-            stopSelf()
-        }
+        SharedContext.platformMediaController?.stopService()
     }
 
     override fun onDestroy() {
         saveCurrentProgress()
-
-
 
         // Clean up skip silence listener
         skipSilenceListener?.deactivate()
